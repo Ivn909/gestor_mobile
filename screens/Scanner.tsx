@@ -38,8 +38,9 @@ const Scanner = () => {
     const res = await fetch(`http://66.179.92.207:3000/api/pos`); // <-- como en POS.tsx
     const productos = await res.json();
 
-    const producto = productos.find((p: any) => p.id === codigo);
-
+    const codigoLimpio = String(codigo).trim();
+    const producto = productos.find((p: any) => String(p.id).trim() === codigoLimpio);
+    
     if (!producto) throw new Error("Producto no encontrado");
 
     agregarAlCarrito(producto);
@@ -47,6 +48,7 @@ const Scanner = () => {
       { text: "OK", onPress: () => setScannedData("") },
     ]);
   } catch (error) {
+    console.log(codigo);
     Alert.alert("Error", "No se encontró el producto o hubo un error", [
       { text: "OK", onPress: () => setScannedData("") },
     ]);
