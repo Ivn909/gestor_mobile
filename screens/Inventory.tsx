@@ -6,18 +6,17 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import InventoryTable from "../components/InventoryTable";
-import ProductForm from "../components/ProductForm";
-import Header from "../components/Header";
+import InventoryTable from "../components/inventory/InventoryTable";
+import ProductForm from "../components/inventory/ProductForm";
+import Header from "../components//navigation/Header";
 
 interface Product {
   ID: number;
   Name: string;
-  Category: string;
-  Stock: number;
+  Category?: string;
+  Stock?: number;
   Price: number;
   Barcode?: string;
-  Description?: string;
 }
 
 interface Category {
@@ -35,9 +34,22 @@ const Inventory: React.FC = () => {
 
   const fetchInventory = async () => {
     try {
-      const res = await fetch(API_BASE);
-      const data = await res.json();
-      setProducts(data);
+      const [invRes, posRes] = await Promise.all([
+        fetch(API_BASE),
+        fetch("http://66.179.92.207:3000/api/pos"),
+      ]);
+      const invData = await invRes.json();
+      const posData = await posRes.json();
+
+      const combined = invData.map((inv: any) => {
+        const pos = posData.find((p: any) => p.productID === inv.ID);
+        return {
+          ...inv,
+          Barcode: pos?.barcode || "N/A",
+        };
+      });
+
+      setProducts(combined);
     } catch (error) {
       console.error("Error al obtener productos:", error);
     } finally {
@@ -56,16 +68,13 @@ const Inventory: React.FC = () => {
   };
 
   useEffect(() => {
-    // Cargar datos iniciales
     fetchInventory();
     fetchCategories();
 
-    // Activar polling automático cada 3 segundos
     const interval = setInterval(() => {
       fetchInventory();
-    }, 1000);
+    }, 3000);
 
-    // Limpiar el intervalo al desmontar el componente
     return () => clearInterval(interval);
   }, []);
 
@@ -99,7 +108,7 @@ const Inventory: React.FC = () => {
   const handleEditSubmit = async () => {
     if (!editingProduct) return;
     const { ID, Name, Category, Price, Stock } = editingProduct;
-    const CategoryID = getCategoryIDByName(Category);
+    const CategoryID = getCategoryIDByName(Category || "");
 
     if (!CategoryID) {
       Alert.alert("Error", "Categoría inválida");
@@ -114,13 +123,13 @@ const Inventory: React.FC = () => {
           Producto: Name,
           Categoria: CategoryID.toString(),
           Precio: Price.toString(),
-          Stock: Stock.toString(),
+          Stock: Stock?.toString() || "0",
         }).toString(),
       });
       const data = await res.json();
       if (data.success) {
         setEditingProduct(null);
-        fetchInventory(); // también se llama por el intervalo
+        fetchInventory();
       } else {
         Alert.alert("Error", data.error || "Error desconocido");
       }

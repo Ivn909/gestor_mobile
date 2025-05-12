@@ -1,28 +1,42 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Alert, StyleSheet, TouchableOpacity, Modal } from "react-native";
+import {
+  View,
+  Text,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+} from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
-import Carrito from "../components/Carrito";
-import Header from "../components/Header";
+import { useIsFocused } from "@react-navigation/native"; 
+
+import Carrito from "../components/scanner/Carrito";
+import Header from "../components/navigation/Header";
 
 const Scanner = () => {
   const [permission, requestPermission] = useCameraPermissions();
+  const isFocused = useIsFocused(); // 👈 Detecta si la pantalla está activa
+
   const [scannedData, setScannedData] = useState("");
   const [carrito, setCarrito] = useState<any[]>([]);
   const [mostrarCarrito, setMostrarCarrito] = useState(false);
 
+  // ✅ Solicitar permiso cada vez que la pantalla vuelve a estar enfocada
   useEffect(() => {
-    if (!permission?.granted) {
+    if (isFocused && !permission?.granted) {
       requestPermission();
     }
-  }, []);
+  }, [isFocused]);
 
   const agregarAlCarrito = (producto: any) => {
     setCarrito((prev) => {
       const existente = prev.find((p) => p.id === producto.id);
       if (existente) {
         return prev.map((p) =>
-          p.id === producto.id ? { ...p, cantidad: p.cantidad + 1 } : p
+          p.id === producto.id
+            ? { ...p, cantidad: p.cantidad + 1 }
+            : p
         );
       }
       return [...prev, { ...producto, cantidad: 1 }];
@@ -30,46 +44,50 @@ const Scanner = () => {
   };
 
   const onBarcodeScanned = async (result: any) => {
-  if (scannedData) return;
-  const codigo = result.data.trim();
-  setScannedData(codigo);
+    if (scannedData || !isFocused) return;
+    const codigo = result.data.trim();
+    setScannedData(codigo);
 
-  try {
-    const res = await fetch(`http://66.179.92.207:3000/api/pos`); // <-- como en POS.tsx
-    const productos = await res.json();
+    try {
+      const res = await fetch(`http://66.179.92.207:3000/api/pos`); // Usa el mismo endpoint que el POS web
+      const productos = await res.json();
+      const producto = productos.find((p: any) => p.id === codigo);
 
-    const codigoLimpio = String(codigo).trim();
-    const producto = productos.find((p: any) => String(p.id).trim() === codigoLimpio);
-    
-    if (!producto) throw new Error("Producto no encontrado");
+      if (!producto) throw new Error("Producto no encontrado");
 
-    agregarAlCarrito(producto);
-    Alert.alert("Producto escaneado", producto.name, [
-      { text: "OK", onPress: () => setScannedData("") },
-    ]);
-  } catch (error) {
-    console.log(codigo);
-    Alert.alert("Error", "No se encontró el producto o hubo un error", [
-      { text: "OK", onPress: () => setScannedData("") },
-    ]);
-  }
-};
+      agregarAlCarrito(producto);
+      Alert.alert("Producto escaneado", producto.name, [
+        { text: "OK", onPress: () => setScannedData("") },
+      ]);
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        "No se encontró el producto o hubo un error",
+        [{ text: "OK", onPress: () => setScannedData("") }]
+      );
+    }
+  };
 
   return (
     <View style={styles.screen}>
       <Header />
       <View style={styles.container}>
-        {permission?.granted ? (
+        {permission?.granted && isFocused ? (
           <CameraView
             style={styles.camera}
-            barcodeScannerSettings={{ barcodeTypes: ["ean13", "code128", "ean8"] }}
+            barcodeScannerSettings={{
+              barcodeTypes: ["ean13", "code128", "ean8"],
+            }}
             onBarcodeScanned={onBarcodeScanned}
           />
         ) : (
-          <Text>Permiso de cámara no concedido</Text>
+          <Text style={styles.noCameraText}>Cámara no disponible</Text>
         )}
 
-        <TouchableOpacity style={styles.carritoBtn} onPress={() => setMostrarCarrito(true)}>
+        <TouchableOpacity
+          style={styles.carritoBtn}
+          onPress={() => setMostrarCarrito(true)}
+        >
           <Ionicons name="cart-outline" size={32} color="white" />
         </TouchableOpacity>
 
@@ -98,9 +116,15 @@ const styles = StyleSheet.create({
   camera: {
     flex: 1,
   },
+  noCameraText: {
+    color: "#fff",
+    textAlign: "center",
+    marginTop: 100,
+    fontSize: 16,
+  },
   carritoBtn: {
     position: "absolute",
-    bottom: 30,
+    bottom: 60,
     right: 20,
     backgroundColor: "#28a745",
     padding: 16,

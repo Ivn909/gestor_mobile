@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
 import { SERVER_URL } from "../ServerConfig";
 import { CommonActions, useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -19,11 +20,13 @@ const LoginScreen: React.FC = () => {
       const data = await res.json();
 
       if (res.ok) {
+        await AsyncStorage.setItem("usuario", username); // 👈 almacena el nombre
+
         Alert.alert("Inicio de sesión exitoso");
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: "MainDrawer" }], // Cambiado de "Dashboard" a "MainDrawer"
+            routes: [{ name: "MainDrawer" }],
           })
         );
       } else {
@@ -68,22 +71,22 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "white",
+    borderRadius: 8,
     padding: 20,
-    borderRadius: 12,
     elevation: 5,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
+    marginBottom: 20,
     textAlign: "center",
-    marginBottom: 16,
   },
   input: {
-    borderColor: "#ced4da",
     borderWidth: 1,
-    borderRadius: 6,
-    marginBottom: 12,
-    paddingHorizontal: 10,
-    height: 40,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 16,
+    backgroundColor: "#fff",
   },
 });

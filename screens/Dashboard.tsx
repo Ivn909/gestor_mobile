@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Header from '../components/Header'; // Asegúrate que la ruta sea correcta
+import Header from '../components/navigation/Header'; // Asegúrate que la ruta sea correcta
 
 const DashboardScreen: React.FC = () => {
   const navigation: any = useNavigation();
@@ -10,7 +10,7 @@ const DashboardScreen: React.FC = () => {
     <View style={styles.screen}>
       <Header />
 
-      {/* Contenido principal */}
+      
       <View style={styles.content}>
         <Text style={styles.title}>Panel de Inicio</Text>
 
@@ -18,7 +18,7 @@ const DashboardScreen: React.FC = () => {
           <Card
             title="Escanear productos"
             text="Escanea productos para vender o resgitrar al inventario."
-            onPress={() => navigation.navigate('Scanner')}
+            onPress={() => navigation.navigate('Escáner')}
           />
           <Card
             title="Inventario"

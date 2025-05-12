@@ -7,6 +7,7 @@ interface Product {
   Category: string;
   Stock: number;
   Price: number;
+  Barcode: string; // ✅ Agregado explícitamente
 }
 
 interface Props {
@@ -30,7 +31,7 @@ const InventoryTable: React.FC<Props> = ({ products, onEdit, onDelete }) => {
   const renderItem = ({ item }: { item: Product }) => (
     <View style={styles.card}>
       <Text style={styles.name}>{item.Name}</Text>
-      <Text style={styles.detail}>ID: {item.ID}</Text>
+      <Text style={styles.detail}>Código de barras: {item.Barcode}</Text> 
       <Text style={styles.detail}>Categoría: {item.Category}</Text>
       <Text style={styles.detail}>Stock: {item.Stock}</Text>
       <Text style={styles.detail}>Precio: ${item.Price}</Text>
@@ -73,27 +74,32 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   detail: {
     fontSize: 14,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   actions: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
+    justifyContent: "space-between",
+    marginTop: 12,
   },
   editButton: {
-    backgroundColor: "#f0ad4e",
+    backgroundColor: "#ffc107",
     padding: 8,
     borderRadius: 6,
-    marginRight: 10,
+    flex: 1,
+    marginRight: 4,
+    alignItems: "center",
   },
   deleteButton: {
-    backgroundColor: "#d9534f",
+    backgroundColor: "#dc3545",
     padding: 8,
     borderRadius: 6,
+    flex: 1,
+    marginLeft: 4,
+    alignItems: "center",
   },
   buttonText: {
     color: "#fff",

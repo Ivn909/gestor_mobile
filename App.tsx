@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react"; // 👈 useState agregado
 import { BackHandler, Alert } from "react-native";
 import {
   NavigationContainer,
@@ -11,8 +11,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import LoginScreen from "./screens/LogIn";
 import DashboardScreen from "./screens/Dashboard";
 import InventoryScreen from "./screens/Inventory";
-import ScannerScreen from "./screens/Scanner"; 
-import MenuLateral from "./components/MenuLateral";
+import ScannerScreen from "./screens/Scanner";
+import LoadingScreen from "./components/Loading"; 
+import MenuLateral from "./components/navigation/MenuLateral";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -24,15 +25,21 @@ const DrawerNavigator = () => (
       header: () => null,
     }}
   >
-    <Drawer.Screen name="Dashboard" component={DashboardScreen} />
+    <Drawer.Screen name="Inicio" component={DashboardScreen} />
     <Drawer.Screen name="Inventario" component={InventoryScreen} />
-    <Drawer.Screen name="Escáner" component={ScannerScreen} /> 
+    <Drawer.Screen name="Escáner" component={ScannerScreen} />
   </Drawer.Navigator>
 );
 
 export default function App() {
   const navigationRef = useNavigationContainerRef();
   const backPressedOnce = useRef(false);
+  const [showLoading, setShowLoading] = useState(true); // 👈 Controlador para loading
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowLoading(false), 5000); // ⏱️ Mostrar por 5 segundos
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const backAction = () => {
@@ -76,6 +83,8 @@ export default function App() {
 
     return () => backHandler.remove();
   }, []);
+
+  if (showLoading) return <LoadingScreen />; // 👈 Mostrar pantalla de carga
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
