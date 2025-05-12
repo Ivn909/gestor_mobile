@@ -51,7 +51,8 @@ const Scanner = () => {
     try {
       const res = await fetch(`http://66.179.92.207:3000/api/pos`); // Usa el mismo endpoint que el POS web
       const productos = await res.json();
-      const producto = productos.find((p: any) => p.id === codigo);
+      const codigoLimpio = String(codigo).trim();
+    const producto = productos.find((p: any) => String(p.id).trim() === codigoLimpio);
 
       if (!producto) throw new Error("Producto no encontrado");
 

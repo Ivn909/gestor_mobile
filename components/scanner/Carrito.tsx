@@ -13,9 +13,9 @@ const Carrito = ({ productos, setProductos, onClose }: any) => {
           actionID: 1, // venta
           actionContextID: 1,
           employeeID: 1,
-          date: new Date().toISOString(),
+          date: new Date().toISOString().slice(0, 10),
           products: productos.map((p: any) => ({
-            barcode: p.id,
+            productID: p.productID,
             quantity: p.cantidad,
           })),
         }),
@@ -42,9 +42,9 @@ const Carrito = ({ productos, setProductos, onClose }: any) => {
           actionID: 2, // agregar stock
           actionContextID: 1,
           employeeID: 1,
-          date: new Date().toISOString(),
+          date: new Date().toISOString().slice(0, 10),
           products: productos.map((p: any) => ({
-            barcode: p.id,
+            productID: p.productID,
             quantity: p.cantidad,
           })),
         }),
