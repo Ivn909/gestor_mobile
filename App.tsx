@@ -10,6 +10,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import LoginScreen from "./screens/LogIn";
 import DashboardScreen from "./screens/Dashboard";
+import InventoryScreen from "./screens/Inventory";
+import ScannerScreen from "./screens/Scanner"; 
 import MenuLateral from "./components/MenuLateral";
 
 const Stack = createNativeStackNavigator();
@@ -19,11 +21,12 @@ const DrawerNavigator = () => (
   <Drawer.Navigator
     drawerContent={(props) => <MenuLateral {...props} />}
     screenOptions={{
-      header: () => null, // Quitar encabezado por defecto
+      header: () => null,
     }}
   >
     <Drawer.Screen name="Dashboard" component={DashboardScreen} />
-    {/* Agrega más pantallas si es necesario */}
+    <Drawer.Screen name="Inventario" component={InventoryScreen} />
+    <Drawer.Screen name="Escáner" component={ScannerScreen} /> 
   </Drawer.Navigator>
 );
 
@@ -37,7 +40,7 @@ export default function App() {
 
       if (navigationRef.isReady() && currentRoute !== "Login") {
         if (backPressedOnce.current) {
-          BackHandler.exitApp(); // Cierra la app si ya presionó una vez
+          BackHandler.exitApp();
         } else {
           backPressedOnce.current = true;
 
@@ -45,10 +48,7 @@ export default function App() {
             "Confirmación",
             "¿Deseas cerrar la aplicación?",
             [
-              {
-                text: "Cancelar",
-                style: "cancel",
-              },
+              { text: "Cancelar", style: "cancel" },
               {
                 text: "Salir",
                 onPress: () => BackHandler.exitApp(),
@@ -62,11 +62,11 @@ export default function App() {
             backPressedOnce.current = false;
           }, 2000);
 
-          return true; // Bloquea acción por defecto
+          return true;
         }
       }
 
-      return false; // Permitir acción por defecto en Login
+      return false;
     };
 
     const backHandler = BackHandler.addEventListener(
@@ -85,7 +85,7 @@ export default function App() {
           screenOptions={{ headerShown: false }}
         >
           <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Dashboard" component={DrawerNavigator} />
+          <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

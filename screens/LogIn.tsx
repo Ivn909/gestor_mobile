@@ -23,7 +23,7 @@ const LoginScreen: React.FC = () => {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: "Dashboard" }],
+            routes: [{ name: "MainDrawer" }], // Cambiado de "Dashboard" a "MainDrawer"
           })
         );
       } else {

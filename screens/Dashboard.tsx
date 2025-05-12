@@ -8,7 +8,6 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <View style={styles.screen}>
-      {/* Encabezado personalizado con menú lateral */}
       <Header />
 
       {/* Contenido principal */}
@@ -17,19 +16,14 @@ const DashboardScreen: React.FC = () => {
 
         <View style={styles.cardContainer}>
           <Card
-            title="Ventas"
-            text="Accede al punto de venta y realiza transacciones."
-            onPress={() => navigation.navigate('POS')}
+            title="Escanear productos"
+            text="Escanea productos para vender o resgitrar al inventario."
+            onPress={() => navigation.navigate('Scanner')}
           />
           <Card
             title="Inventario"
             text="Consulta y gestiona el stock de productos."
-            onPress={() => navigation.navigate('Inventory')}
-          />
-          <Card
-            title="Reportes"
-            text="Visualiza y crea informes de ventas y actividad."
-            onPress={() => navigation.navigate('Reports')}
+            onPress={() => navigation.navigate('Inventario')}
           />
         </View>
       </View>

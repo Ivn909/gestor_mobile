@@ -1,14 +1,22 @@
-// components/MenuLateral.tsx
 import React from 'react';
 import {
   DrawerContentScrollView,
   DrawerItem,
 } from '@react-navigation/drawer';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { CommonActions, useNavigation } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
+
+// Navegador raíz del stack
+type RootStackParamList = {
+  Login: undefined;
+  MainDrawer: {
+    screen: 'Dashboard' | 'Inventario' | 'Escánear';
+  };
+};
 
 const MenuLateral = (props: any) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const handleLogout = () => {
     navigation.dispatch(
@@ -21,10 +29,19 @@ const MenuLateral = (props: any) => {
 
   return (
     <DrawerContentScrollView {...props}>
-      {/* Opciones del menú lateral */}
       <DrawerItem
-        label="Inicio"
-        onPress={() => navigation.navigate('Dashboard')}
+        label="Dashboard"
+        onPress={() => navigation.navigate('MainDrawer', { screen: 'Dashboard' })}
+        labelStyle={styles.drawerLabel}
+      />
+      <DrawerItem
+        label="Inventario"
+        onPress={() => navigation.navigate('MainDrawer', { screen: 'Inventario' })}
+        labelStyle={styles.drawerLabel}
+      />
+      <DrawerItem
+        label="Escáner"
+        onPress={() => navigation.navigate('MainDrawer', { screen: 'Escáner' })}
         labelStyle={styles.drawerLabel}
       />
       <DrawerItem
