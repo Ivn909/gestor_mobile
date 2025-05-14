@@ -7,7 +7,7 @@ interface Product {
   Category: string;
   Stock: number;
   Price: number;
-  Barcode: string; // ✅ Agregado explícitamente
+ 
 }
 
 interface Props {
@@ -31,7 +31,7 @@ const InventoryTable: React.FC<Props> = ({ products, onEdit, onDelete }) => {
   const renderItem = ({ item }: { item: Product }) => (
     <View style={styles.card}>
       <Text style={styles.name}>{item.Name}</Text>
-      <Text style={styles.detail}>Código de barras: {item.Barcode}</Text> 
+  
       <Text style={styles.detail}>Categoría: {item.Category}</Text>
       <Text style={styles.detail}>Stock: {item.Stock}</Text>
       <Text style={styles.detail}>Precio: ${item.Price}</Text>

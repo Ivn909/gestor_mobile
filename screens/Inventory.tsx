@@ -5,10 +5,12 @@ import {
   ActivityIndicator,
   Alert,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import InventoryTable from "../components/inventory/InventoryTable";
 import ProductForm from "../components/inventory/ProductForm";
-import Header from "../components//navigation/Header";
+import Header from "../components/navigation/Header";
+import FilterInventory from "../components/inventory/FilterInventory";
 
 interface Product {
   ID: number;
@@ -29,6 +31,15 @@ const Inventory: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [filters, setFilters] = useState({
+    name: "",
+    id: "",
+    barcode: "",
+    category: "",
+    priceMin: "",
+    priceMax: "",
+  });
 
   const API_BASE = "http://66.179.92.207:3000/api/inventory";
 
@@ -78,9 +89,6 @@ const Inventory: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const getCategoryIDByName = (name: string): number | undefined =>
-    categories.find((c) => c.name === name)?.id;
-
   const handleDelete = async (id: number) => {
     Alert.alert("Confirmar", "¿Deseas eliminar este producto?", [
       { text: "Cancelar", style: "cancel" },
@@ -101,89 +109,74 @@ const Inventory: React.FC = () => {
     ]);
   };
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleEditSubmit = async () => {
-    if (!editingProduct) return;
-    const { ID, Name, Category, Price, Stock } = editingProduct;
-    const CategoryID = getCategoryIDByName(Category || "");
-
-    if (!CategoryID) {
-      Alert.alert("Error", "Categoría inválida");
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/${ID}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          Producto: Name,
-          Categoria: CategoryID.toString(),
-          Precio: Price.toString(),
-          Stock: Stock?.toString() || "0",
-        }).toString(),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setEditingProduct(null);
-        fetchInventory();
-      } else {
-        Alert.alert("Error", data.error || "Error desconocido");
-      }
-    } catch (err) {
-      Alert.alert("Error", "No se pudo conectar al servidor");
-    }
-  };
+  const filteredProducts = products.filter((product) => {
+    const matchName =
+      filters.name === "" ||
+      product.Name.toLowerCase().includes(filters.name.toLowerCase());
+    const matchID =
+      filters.id === "" || product.ID.toString().includes(filters.id);
+    const matchBarcode =
+      filters.barcode === "" ||
+      product.Barcode?.toLowerCase().includes(filters.barcode.toLowerCase());
+    const matchCategory =
+      filters.category === "" ||
+      product.Category?.toLowerCase() === filters.category.toLowerCase();
+    const matchPriceMin =
+      filters.priceMin === "" ||
+      product.Price >= parseFloat(filters.priceMin);
+    const matchPriceMax =
+      filters.priceMax === "" ||
+      product.Price <= parseFloat(filters.priceMax);
+    return (
+      matchName &&
+      matchID &&
+      matchBarcode &&
+      matchCategory &&
+      matchPriceMin &&
+      matchPriceMax
+    );
+  });
 
   return (
-    <View style={styles.screen}>
-      <Header />
+    <View style={styles.container}>
+      <Header title="Inventario" />
 
-      <View style={styles.container}>
-        <Text style={styles.title}>Inventario</Text>
+      <FilterInventory
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        categories={categories}
+      />
 
-        {loading ? (
-          <ActivityIndicator size="large" color="#000" />
-        ) : (
-          <InventoryTable
-            products={products}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        )}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <InventoryTable
+          products={filteredProducts}
+          onEdit={setEditingProduct}
+          onDelete={handleDelete}
+        />
+      )}
 
-        {editingProduct && (
-          <ProductForm
-            product={editingProduct}
-            onChange={setEditingProduct}
-            onSubmit={handleEditSubmit}
-            onCancel={() => setEditingProduct(null)}
-            categories={categories}
-            mode="edit"
-          />
-        )}
-      </View>
+      {editingProduct && (
+        <ProductForm
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSave={fetchInventory}
+          categories={categories}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
   container: {
-    padding: 20,
-    paddingBottom: 50,
     flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    backgroundColor: "#fff",
   },
 });
 

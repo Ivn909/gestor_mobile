@@ -25,6 +25,11 @@ const DashboardScreen: React.FC = () => {
             text="Consulta y gestiona el stock de productos."
             onPress={() => navigation.navigate('Inventario')}
           />
+          <Card
+            title="Empleados"
+            text="Consulta y gestiona los empleados."
+            onPress={() => navigation.navigate('Empleados')}
+          />
         </View>
       </View>
     </View>

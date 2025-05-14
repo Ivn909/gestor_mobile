@@ -9,20 +9,24 @@ import {
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
-import { useIsFocused } from "@react-navigation/native"; 
+import { useIsFocused } from "@react-navigation/native";
 
 import Carrito from "../components/scanner/Carrito";
 import Header from "../components/navigation/Header";
+import NewProductAlert from "../components/scanner/NewProductAlert";
+import AddProductForm from "../components/scanner/AddProductForm";
 
 const Scanner = () => {
   const [permission, requestPermission] = useCameraPermissions();
-  const isFocused = useIsFocused(); // 👈 Detecta si la pantalla está activa
+  const isFocused = useIsFocused();
 
   const [scannedData, setScannedData] = useState("");
   const [carrito, setCarrito] = useState<any[]>([]);
   const [mostrarCarrito, setMostrarCarrito] = useState(false);
+  const [puedeEscanear, setPuedeEscanear] = useState(true);
+  const [mostrarNuevoProducto, setMostrarNuevoProducto] = useState(false);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
-  // ✅ Solicitar permiso cada vez que la pantalla vuelve a estar enfocada
   useEffect(() => {
     if (isFocused && !permission?.granted) {
       requestPermission();
@@ -34,9 +38,7 @@ const Scanner = () => {
       const existente = prev.find((p) => p.id === producto.id);
       if (existente) {
         return prev.map((p) =>
-          p.id === producto.id
-            ? { ...p, cantidad: p.cantidad + 1 }
-            : p
+          p.id === producto.id ? { ...p, cantidad: p.cantidad + 1 } : p
         );
       }
       return [...prev, { ...producto, cantidad: 1 }];
@@ -44,92 +46,110 @@ const Scanner = () => {
   };
 
   const onBarcodeScanned = async (result: any) => {
-    if (scannedData || !isFocused) return;
+    if (!puedeEscanear || !isFocused) return;
+
     const codigo = result.data.trim();
     setScannedData(codigo);
+    setPuedeEscanear(false);
 
     try {
-      const res = await fetch(`http://66.179.92.207:3000/api/pos`); // Usa el mismo endpoint que el POS web
+      const res = await fetch(`http://66.179.92.207:3000/api/pos`);
       const productos = await res.json();
-      const codigoLimpio = String(codigo).trim();
-    const producto = productos.find((p: any) => String(p.id).trim() === codigoLimpio);
 
-      if (!producto) throw new Error("Producto no encontrado");
+      const producto = productos.find(
+        (p: any) => String(p.id).trim() === codigo
+      );
 
-      agregarAlCarrito(producto);
+      if (!producto) {
+        setMostrarNuevoProducto(true);
+        return;
+      }
+
+      // ✅ Asegura que el producto tenga el campo productID (igual a ID real en base de datos)
+      const productoConID = { ...producto, productID: producto.productID || producto.id };
+
+      agregarAlCarrito(productoConID);
+
       Alert.alert("Producto escaneado", producto.name, [
-        { text: "OK", onPress: () => setScannedData("") },
+        {
+          text: "OK",
+          onPress: () => setScannedData(""),
+        },
       ]);
     } catch (error) {
-      Alert.alert(
-        "Error",
-        "No se encontró el producto o hubo un error",
-        [{ text: "OK", onPress: () => setScannedData("") }]
-      );
+      Alert.alert("Error", "No se pudo escanear el producto");
+    } finally {
+      setTimeout(() => {
+        setPuedeEscanear(true);
+      }, 3000);
     }
   };
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.container}>
       <Header />
-      <View style={styles.container}>
-        {permission?.granted && isFocused ? (
-          <CameraView
-            style={styles.camera}
-            barcodeScannerSettings={{
-              barcodeTypes: ["ean13", "code128", "ean8"],
-            }}
-            onBarcodeScanned={onBarcodeScanned}
-          />
-        ) : (
-          <Text style={styles.noCameraText}>Cámara no disponible</Text>
-        )}
+      {isFocused && permission?.granted && !mostrarFormulario && (
+        <CameraView
+          style={styles.camera}
+          barcodeScannerSettings={{
+            barcodeTypes: ["qr", "ean13", "ean8", "code39", "code128"],
+          }}
+          onBarcodeScanned={onBarcodeScanned}
+        />
+      )}
 
-        <TouchableOpacity
-          style={styles.carritoBtn}
-          onPress={() => setMostrarCarrito(true)}
-        >
-          <Ionicons name="cart-outline" size={32} color="white" />
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.carritoBtn}
+        onPress={() => setMostrarCarrito(true)}
+      >
+        <Ionicons name="cart" size={28} color="white" />
+      </TouchableOpacity>
 
-        <Modal visible={mostrarCarrito} animationType="slide">
-          <Carrito
-            productos={carrito}
-            setProductos={setCarrito}
-            onClose={() => setMostrarCarrito(false)}
-          />
-        </Modal>
-      </View>
+      <Modal visible={mostrarCarrito} animationType="slide">
+        <Carrito
+          productos={carrito}
+          setProductos={setCarrito}
+          onClose={() => setMostrarCarrito(false)}
+        />
+      </Modal>
+
+      <NewProductAlert
+        visible={mostrarNuevoProducto}
+        onCancel={() => {
+          setMostrarNuevoProducto(false);
+          setScannedData("");
+          setPuedeEscanear(true);
+        }}
+        onRegister={() => {
+          setMostrarNuevoProducto(false);
+          setMostrarFormulario(true);
+        }}
+      />
+
+      <AddProductForm
+        visible={mostrarFormulario}
+        onClose={() => {
+          setMostrarFormulario(false);
+          setScannedData("");
+          setPuedeEscanear(true);
+        }}
+        barcode={scannedData}
+      />
     </View>
   );
 };
 
-export default Scanner;
-
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-  container: {
-    flex: 1,
-  },
-  camera: {
-    flex: 1,
-  },
-  noCameraText: {
-    color: "#fff",
-    textAlign: "center",
-    marginTop: 100,
-    fontSize: 16,
-  },
+  container: { flex: 1 },
+  camera: { flex: 1 },
   carritoBtn: {
     position: "absolute",
     bottom: 60,
     right: 20,
     backgroundColor: "#28a745",
-    padding: 16,
-    borderRadius: 50,
-    elevation: 5,
+    padding: 12,
+    borderRadius: 30,
   },
 });
+
+export default Scanner;

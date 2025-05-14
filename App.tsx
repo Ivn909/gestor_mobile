@@ -1,5 +1,11 @@
-import React, { useEffect, useRef, useState } from "react"; // 👈 useState agregado
-import { BackHandler, Alert } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  BackHandler,
+  Alert,
+  Animated,
+  StyleSheet,
+  View,
+} from "react-native";
 import {
   NavigationContainer,
   useNavigationContainerRef,
@@ -12,7 +18,8 @@ import LoginScreen from "./screens/LogIn";
 import DashboardScreen from "./screens/Dashboard";
 import InventoryScreen from "./screens/Inventory";
 import ScannerScreen from "./screens/Scanner";
-import LoadingScreen from "./components/Loading"; 
+import LoadingScreen from "./components/Loading";
+import Employees from "./screens/Employees";
 import MenuLateral from "./components/navigation/MenuLateral";
 
 const Stack = createNativeStackNavigator();
@@ -26,25 +33,44 @@ const DrawerNavigator = () => (
     }}
   >
     <Drawer.Screen name="Inicio" component={DashboardScreen} />
-    <Drawer.Screen name="Inventario" component={InventoryScreen} />
     <Drawer.Screen name="Escáner" component={ScannerScreen} />
+    <Drawer.Screen name="Inventario" component={InventoryScreen} />
+    <Drawer.Screen name="Empleados" component={Employees} />
+    
   </Drawer.Navigator>
 );
 
 export default function App() {
   const navigationRef = useNavigationContainerRef();
   const backPressedOnce = useRef(false);
-  const [showLoading, setShowLoading] = useState(true); // 👈 Controlador para loading
+  const [showLoading, setShowLoading] = useState(true);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowLoading(false), 5000); // ⏱️ Mostrar por 5 segundos
+    // Fade in
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+
+    // Mantener por 5s y luego hacer fade out
+    const timer = setTimeout(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }).start(() => {
+        setShowLoading(false);
+      });
+    }, 5000);
+
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     const backAction = () => {
       const currentRoute = navigationRef.getCurrentRoute()?.name;
-
       if (navigationRef.isReady() && currentRoute !== "Login") {
         if (backPressedOnce.current) {
           BackHandler.exitApp();
@@ -72,7 +98,6 @@ export default function App() {
           return true;
         }
       }
-
       return false;
     };
 
@@ -80,11 +105,16 @@ export default function App() {
       "hardwareBackPress",
       backAction
     );
-
     return () => backHandler.remove();
   }, []);
 
-  if (showLoading) return <LoadingScreen />; // 👈 Mostrar pantalla de carga
+  if (showLoading) {
+    return (
+      <Animated.View style={[styles.loadingContainer, { opacity: fadeAnim }]}>
+        <LoadingScreen />
+      </Animated.View>
+    );
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -100,3 +130,9 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+  },
+});
