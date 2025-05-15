@@ -67,12 +67,13 @@ const MenuLateral = (props: any) => {
     >
       <View style={styles.header}>
         <Image
-          source={require("../../assets/LOGO.png")}
+          source={require("../../assets/LOGOH.png")}
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.username}>Hola, {username}</Text>
       </View>
+
+      <Text style={styles.username}>Usuario: {username}</Text>
 
       <View style={styles.menu}>
         <MenuItem
@@ -131,28 +132,27 @@ export default MenuLateral;
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    justifyContent: "space-between",
     paddingVertical: 20,
     backgroundColor: "#fff",
   },
   header: {
     alignItems: "center",
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderColor: "#eee",
+    marginBottom: 10, // ajusta si necesitas más compacto
   },
   logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 10,
+    width: 210,
+    height: 120,
   },
   username: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#28a745",
+    paddingHorizontal: 20,
+    marginTop: 0, // antes tenía 10
+    marginBottom: 10,
   },
   menu: {
-    marginTop: 20,
+    marginTop: 0, // antes 20
     paddingHorizontal: 20,
   },
   item: {
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   footer: {
     borderTopWidth: 1,
     borderColor: "#eee",
-    marginTop: 30,
+    marginTop: 370,
     paddingHorizontal: 20,
   },
 });

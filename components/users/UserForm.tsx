@@ -42,13 +42,18 @@ const UserForm: React.FC<Props> = ({
   const [passwordMismatch, setPasswordMismatch] = useState(false);
 
   useEffect(() => {
-    if (mode === "add") {
+    const shouldValidate =
+      mode === "add" || (mode === "edit" && (user.Password || "").length > 0);
+
+    if (shouldValidate) {
       setPasswordMismatch(user.Password !== confirmPassword);
+    } else {
+      setPasswordMismatch(false);
     }
   }, [user.Password, confirmPassword, mode]);
 
   const handleSubmit = () => {
-    if (mode === "add" && passwordMismatch) {
+    if (passwordMismatch) {
       Alert.alert("Error", "Las contraseñas no coinciden.");
       return;
     }
@@ -102,30 +107,29 @@ const UserForm: React.FC<Props> = ({
           onChangeText={(text) => onChange({ ...user, User: text })}
         />
 
-        {mode === "add" && (
-          <>
-            <Text style={styles.label}>Contraseña</Text>
-            <TextInput
-              style={styles.input}
-              secureTextEntry
-              value={user.Password || ""}
-              onChangeText={(text) => onChange({ ...user, Password: text })}
-            />
+        {/* Campo de contraseña siempre visible pero opcional en edición */}
+        <Text style={styles.label}>Contraseña</Text>
+        <TextInput
+          style={styles.input}
+          secureTextEntry
+          value={user.Password || ""}
+          onChangeText={(text) => onChange({ ...user, Password: text })}
+          placeholder={
+            mode === "edit"
+              ? "Déjalo en blanco para no modificar"
+              : "Ingresa la contraseña"
+          }
+        />
 
-            <Text style={styles.label}>Confirmar Contraseña</Text>
-            <TextInput
-              style={[
-                styles.input,
-                passwordMismatch && { borderColor: "red" },
-              ]}
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
-            {passwordMismatch && (
-              <Text style={styles.error}>Las contraseñas no coinciden.</Text>
-            )}
-          </>
+        <Text style={styles.label}>Confirmar Contraseña</Text>
+        <TextInput
+          style={[styles.input, passwordMismatch && { borderColor: "red" }]}
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+        {passwordMismatch && (
+          <Text style={styles.error}>Las contraseñas no coinciden.</Text>
         )}
 
         <Text style={styles.label}>Estado</Text>
@@ -133,17 +137,21 @@ const UserForm: React.FC<Props> = ({
           style={styles.input}
           keyboardType="numeric"
           value={user.Status.toString()}
-          onChangeText={(text) =>
-            onChange({ ...user, Status: parseInt(text) })
-          }
+          onChangeText={(text) => onChange({ ...user, Status: parseInt(text) })}
           placeholder="1 = Activo, 0 = Inactivo"
         />
 
         <Text style={styles.label}>Fecha de Contratación</Text>
         <TextInput
           style={styles.input}
-          value={user.Hired}
-          onChangeText={(text) => onChange({ ...user, Hired: text })}
+          value={user.Hired.slice(0, 10)} // <- Asegura el formato compatible con MySQL
+          onChangeText={(text) => {
+            // Validar entrada tipo fecha YYYY-MM-DD simple
+            const isValid = /^\d{4}-\d{2}-\d{2}$/.test(text);
+            if (isValid || text === "") {
+              onChange({ ...user, Hired: text });
+            }
+          }}
           placeholder="YYYY-MM-DD"
         />
 
@@ -151,7 +159,7 @@ const UserForm: React.FC<Props> = ({
           <TouchableOpacity
             style={styles.saveButton}
             onPress={handleSubmit}
-            disabled={mode === "add" && passwordMismatch}
+            disabled={passwordMismatch}
           >
             <Text style={styles.buttonText}>Guardar</Text>
           </TouchableOpacity>

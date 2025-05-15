@@ -10,7 +10,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import EmployeesTable from "../components/users/EmployeesTable";
 import Header from "../components/navigation/Header";
-import UserForm from "../components/users/UserForm"; // Asegúrate que esté en esta ruta
+import UserForm from "../components/users/UserForm";
 import { SERVER_URL } from "../ServerConfig";
 
 interface Employee {
@@ -113,12 +113,26 @@ const Employees: React.FC = () => {
     if (!editingUser) return;
     const isAdd = editingUser.ID === 0;
 
+    const payload: any = {
+      employeeID: editingUser.ID,
+      name: editingUser.Name,
+      phone: editingUser.Phone,
+      role: editingUser.Role,
+       hiringDate: editingUser.Hired.slice(0, 10), // <-- clave aquí
+      username: editingUser.User,
+      status: editingUser.Status,
+    };
+
+    if (isAdd && editingUser.Password) {
+      payload.password = editingUser.Password;
+    }
+
     try {
       const res = await fetch(`${SERVER_URL}/api/employees`, {
         method: isAdd ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(editingUser),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -142,7 +156,9 @@ const Employees: React.FC = () => {
   };
 
   if (loading || userRole === null) {
-    return <ActivityIndicator size="large" color="#28a745" style={{ marginTop: 30 }} />;
+    return (
+      <ActivityIndicator size="large" color="#28a745" style={{ marginTop: 30 }} />
+    );
   }
 
   return (

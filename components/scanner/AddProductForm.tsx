@@ -1,140 +1,228 @@
 import React, { useState, useEffect } from "react";
 import {
-  Modal,
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  ScrollView,
+  Dimensions,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+
+const { height, width } = Dimensions.get("window");
 
 type Props = {
   visible: boolean;
-  barcode: string;
   onClose: () => void;
+  barcode: string;
 };
 
-const AddProductForm = ({ visible, barcode, onClose }: Props) => {
+type Category = {
+  id: number;
+  name: string;
+};
+
+const AddProductForm = ({ visible, onClose, barcode }: Props) => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [codigo, setCodigo] = useState("");
+  const [stock, setStock] = useState("");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const resetForm = () => {
+    setName("");
+    setPrice("");
+    setStock("");
+    setCategory("");
+    setDescription("");
+  };
+
+  // Limpiar campos cada vez que se abre el modal
+  useEffect(() => {
+    if (visible) {
+      resetForm();
+    }
+  }, [visible]);
 
   useEffect(() => {
-    setCodigo(barcode); // ✅ precarga el código al abrir
-  }, [barcode]);
-
-  const handleSubmit = async () => {
-    if (!name || !price || !codigo) {
-      alert("Completa todos los campos");
-      return;
+    if (visible) {
+      fetch("http://66.179.92.207:3000/api/inventory/categories")
+        .then((res) => res.json())
+        .then((data: Category[]) => {
+          setCategories(data);
+        })
+        .catch((err) => {
+          console.error("Error al obtener categorías:", err);
+          Alert.alert("Error", "No se pudieron cargar las categorías.");
+        });
     }
+  }, [visible]);
 
+  const registrarProducto = async () => {
     try {
       const res = await fetch("http://66.179.92.207:3000/api/inventory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          price: parseFloat(price),
-          barcode: codigo,
+          Producto: name,
+          CodigoBarras: barcode,
+          Categoria: parseInt(category),
+          Descripcion: description,
+          Stock: parseInt(stock),
+          Precio: parseFloat(price),
         }),
       });
-
       const data = await res.json();
+
       if (data.success) {
-        alert("Producto agregado correctamente");
+        Alert.alert("Éxito", "Producto registrado correctamente");
+        resetForm(); // Limpiar formulario después de guardar
         onClose();
       } else {
-        alert("Error al guardar producto");
+        throw new Error(data.error || "Error desconocido");
       }
-    } catch {
-      alert("Error de conexión");
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
     }
   };
 
   return (
-    <Modal visible={visible} animationType="slide">
+    <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.container}>
-        <Text style={styles.title}>Nuevo Producto</Text>
+        <Text style={styles.title}>Registrar nuevo producto</Text>
+        <ScrollView>
+          <Text style={styles.label}>Código de Barras</Text>
+          <TextInput style={styles.input} value={barcode} editable={false} />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Nombre del producto"
-          value={name}
-          onChangeText={setName}
-        />
+          <Text style={styles.label}>Nombre</Text>
+          <TextInput style={styles.input} value={name} onChangeText={setName} />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Precio"
-          value={price}
-          onChangeText={setPrice}
-          keyboardType="decimal-pad"
-        />
+          <Text style={styles.label}>Categoría</Text>
+          <Picker
+            selectedValue={category}
+            onValueChange={(value) => setCategory(value)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Selecciona una categoría" value="" />
+            {categories.map((cat) => (
+              <Picker.Item
+                key={cat.id}
+                label={cat.name}
+                value={String(cat.id)}
+              />
+            ))}
+          </Picker>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Código de barras"
-          value={codigo}
-          onChangeText={setCodigo}
-          editable={false} // 👈 si quieres que lo puedan editar, cambia a true
-        />
+          <Text style={styles.label}>Precio</Text>
+          <TextInput
+            style={styles.input}
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="decimal-pad"
+          />
 
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.cancel} onPress={onClose}>
-            <Text style={styles.btnText}>Cancelar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.save} onPress={handleSubmit}>
-            <Text style={styles.btnText}>Guardar</Text>
-          </TouchableOpacity>
-        </View>
+          <Text style={styles.label}>Stock</Text>
+          <TextInput
+            style={styles.input}
+            value={stock}
+            onChangeText={setStock}
+            keyboardType="numeric"
+          />
+
+          <Text style={styles.label}>Descripción</Text>
+          <TextInput
+            style={styles.input}
+            value={description}
+            onChangeText={setDescription}
+          />
+
+          <View style={styles.buttonGroup}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={registrarProducto}
+            >
+              <Text style={styles.buttonText}>Guardar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => {
+                resetForm(); // Limpiar también si cancela
+                onClose();
+              }}
+            >
+              <Text style={styles.buttonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
     </Modal>
   );
 };
-
 export default AddProductForm;
+// ... tus estilos siguen iguales
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    position: "absolute",
+    bottom: 0,
+    width: width,
+    height: height * 0.8,
+    backgroundColor: "white",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     padding: 20,
-    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: -3 },
+    shadowRadius: 8,
+    elevation: 10,
   },
   title: {
-    fontSize: 20,
-    marginBottom: 20,
+    fontSize: 22,
     fontWeight: "bold",
+    marginBottom: 20,
     textAlign: "center",
+  },
+  label: {
+    fontSize: 16,
+    marginTop: 10,
   },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
+    borderRadius: 8,
     padding: 10,
-    marginBottom: 12,
-    borderRadius: 6,
+    marginTop: 4,
   },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
+  picker: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginTop: 4,
   },
-  cancel: {
-    backgroundColor: "#6c757d",
-    padding: 12,
-    borderRadius: 6,
-    flex: 1,
-    marginRight: 10,
+  buttonGroup: {
+    marginTop: 30,
+    gap: 12,
   },
-  save: {
+  saveButton: {
     backgroundColor: "#28a745",
     padding: 12,
-    borderRadius: 6,
-    flex: 1,
+    borderRadius: 8,
+    alignItems: "center",
   },
-  btnText: {
-    color: "#fff",
-    textAlign: "center",
+  cancelButton: {
+    backgroundColor: "#ccc",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
     fontWeight: "bold",
+    fontSize: 16,
   },
 });
