@@ -61,6 +61,8 @@ const Carrito = ({ productos, setProductos, onClose }: any) => {
     }
   };
 
+
+  // fetch para agregar stock al inventario.
   const agregarStock = async () => {
     try {
       for (const producto of productos) {
@@ -69,15 +71,17 @@ const Carrito = ({ productos, setProductos, onClose }: any) => {
           continue;
         }
 
+        const productID = producto.productID;
+
         const res = await fetch(
-          `http://lo:3000/api/inventory/stock/${producto.productID}`,
+          `http://66.179.92.207:3000/api/inventory/stock/${productID}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({
-              productID: producto.productID,
-              cantidad: producto.cantidad,
+              productID: productID,
+              quantity: producto.cantidad,
             }),
           }
         );

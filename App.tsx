@@ -1,11 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  BackHandler,
-  Alert,
-  Animated,
-  StyleSheet,
-  View,
-} from "react-native";
+import { BackHandler, Alert, Animated, StyleSheet, View } from "react-native";
 import {
   NavigationContainer,
   useNavigationContainerRef,
@@ -25,58 +19,72 @@ import MenuLateral from "./components/navigation/MenuLateral";
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
+const SERVER_URL = "http://66.179.92.207:3000/"; // <--- cámbialo si usas una IP diferente
+
 const DrawerNavigator = () => (
   <Drawer.Navigator
     drawerContent={(props) => <MenuLateral {...props} />}
-    screenOptions={{
-      header: () => null,
-    }}
+    screenOptions={{ headerShown: false }}
   >
     <Drawer.Screen name="Inicio" component={DashboardScreen} />
     <Drawer.Screen name="Escáner" component={ScannerScreen} />
     <Drawer.Screen name="Inventario" component={InventoryScreen} />
     <Drawer.Screen name="Empleados" component={Employees} />
-    
   </Drawer.Navigator>
 );
 
 export default function App() {
   const navigationRef = useNavigationContainerRef();
-  const backPressedOnce = useRef(false);
-  const [showLoading, setShowLoading] = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [showLoading, setShowLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Fade in
+    let isMounted = true;
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 800,
       useNativeDriver: true,
     }).start();
 
-    // Mantener por 5s y luego hacer fade out
     const timer = setTimeout(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 800,
         useNativeDriver: true,
       }).start(() => {
-        setShowLoading(false);
+        if (isMounted) setShowLoading(false);
       });
-    }, 5000);
+    }, 3000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const res = await fetch(`${SERVER_URL}/api/auth/check-session`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setIsLoggedIn(data.loggedIn);
+      } catch (error) {
+        console.error("Error verificando sesión:", error);
+        setIsLoggedIn(false);
+      }
+    };
+    checkSession();
   }, []);
 
   useEffect(() => {
     const backAction = () => {
-      const currentRoute = navigationRef.getCurrentRoute()?.name;
-      if (navigationRef.isReady() && currentRoute !== "Login") {
-        if (backPressedOnce.current) {
-          BackHandler.exitApp();
-        } else {
-          backPressedOnce.current = true;
-
+      if (navigationRef.isReady()) {
+        const currentRoute = navigationRef.getCurrentRoute()?.name;
+        if (currentRoute && currentRoute !== "Login") {
           Alert.alert(
             "Confirmación",
             "¿Deseas cerrar la aplicación?",
@@ -90,11 +98,6 @@ export default function App() {
             ],
             { cancelable: true }
           );
-
-          setTimeout(() => {
-            backPressedOnce.current = false;
-          }, 2000);
-
           return true;
         }
       }
@@ -106,9 +109,9 @@ export default function App() {
       backAction
     );
     return () => backHandler.remove();
-  }, []);
+  }, [navigationRef]);
 
-  if (showLoading) {
+  if (showLoading || isLoggedIn === null) {
     return (
       <Animated.View style={[styles.loadingContainer, { opacity: fadeAnim }]}>
         <LoadingScreen />
@@ -120,7 +123,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
-          initialRouteName="Login"
+          initialRouteName={isLoggedIn ? "MainDrawer" : "Login"}
           screenOptions={{ headerShown: false }}
         >
           <Stack.Screen name="Login" component={LoginScreen} />
@@ -134,5 +137,8 @@ export default function App() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
 });

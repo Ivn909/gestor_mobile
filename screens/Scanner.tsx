@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
+  Vibration,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,9 +24,10 @@ const Scanner = () => {
   const [scannedData, setScannedData] = useState("");
   const [carrito, setCarrito] = useState<any[]>([]);
   const [mostrarCarrito, setMostrarCarrito] = useState(false);
-  const [puedeEscanear, setPuedeEscanear] = useState(true);
   const [mostrarNuevoProducto, setMostrarNuevoProducto] = useState(false);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+
+  const puedeEscanearRef = useRef(true);
 
   useEffect(() => {
     if (isFocused && !permission?.granted) {
@@ -46,11 +48,11 @@ const Scanner = () => {
   };
 
   const onBarcodeScanned = async (result: any) => {
-    if (!puedeEscanear || !isFocused) return;
+    if (!puedeEscanearRef.current || !isFocused) return;
+    puedeEscanearRef.current = false;
 
     const codigo = result.data.trim();
     setScannedData(codigo);
-    setPuedeEscanear(false);
 
     try {
       const res = await fetch(`http://66.179.92.207:3000/api/pos`);
@@ -65,23 +67,28 @@ const Scanner = () => {
         return;
       }
 
-      // ✅ Asegura que el producto tenga el campo productID (igual a ID real en base de datos)
-      const productoConID = { ...producto, productID: producto.productID || producto.id };
+      const productoConID = {
+        ...producto,
+        productID: producto.productID || producto.id,
+      };
 
       agregarAlCarrito(productoConID);
+
+      // ✅ Vibración breve
+      Vibration.vibrate(100);
 
       Alert.alert("Producto escaneado", producto.name, [
         {
           text: "OK",
-          onPress: () => setScannedData(""),
+          onPress: () => {
+            setScannedData("");
+            puedeEscanearRef.current = true;
+          },
         },
       ]);
     } catch (error) {
       Alert.alert("Error", "No se pudo escanear el producto");
-    } finally {
-      setTimeout(() => {
-        setPuedeEscanear(true);
-      }, 3000);
+      puedeEscanearRef.current = true;
     }
   };
 
@@ -92,7 +99,7 @@ const Scanner = () => {
         <CameraView
           style={styles.camera}
           barcodeScannerSettings={{
-            barcodeTypes: ["qr", "ean13", "ean8", "code39", "code128"],
+            barcodeTypes: ["ean13", "ean8", "code39", "code128"],
           }}
           onBarcodeScanned={onBarcodeScanned}
         />
@@ -118,7 +125,7 @@ const Scanner = () => {
         onCancel={() => {
           setMostrarNuevoProducto(false);
           setScannedData("");
-          setPuedeEscanear(true);
+          puedeEscanearRef.current = true;
         }}
         onRegister={() => {
           setMostrarNuevoProducto(false);
@@ -131,7 +138,7 @@ const Scanner = () => {
         onClose={() => {
           setMostrarFormulario(false);
           setScannedData("");
-          setPuedeEscanear(true);
+          puedeEscanearRef.current = true;
         }}
         barcode={scannedData}
       />

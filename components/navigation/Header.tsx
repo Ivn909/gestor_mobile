@@ -25,7 +25,7 @@ export default Header;
 const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#28a745',
-    height: screenHeight * 0.10, // 12% de la altura de pantalla
+    height: screenHeight * 0.12, // 12% de la altura de pantalla
     width: '100%',
     justifyContent: 'flex-end', // contenido al fondo del header
     paddingBottom: 10,

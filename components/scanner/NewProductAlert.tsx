@@ -15,7 +15,8 @@ const NewProductAlert = ({ visible, onCancel, onRegister }: Props) => {
         <View style={styles.box}>
           <Text style={styles.title}>Producto no encontrado</Text>
           <Text style={styles.message}>
-            Se ha escaneado un producto que no se encuentra en el inventario. ¿Qué quieres hacer con él?
+            Se ha escaneado un producto que no se encuentra en el inventario.
+            ¿Qué quieres hacer con él?
           </Text>
           <View style={styles.buttons}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
