@@ -58,9 +58,11 @@ const Scanner = () => {
       const res = await fetch(`http://66.179.92.207:3000/api/pos`);
       const productos = await res.json();
 
-      const producto = productos.find(
-        (p: any) => String(p.id).trim() === codigo
-      );
+      const producto = productos.find((p: any) => {
+        // Comparar numéricamente si el código escaneado es un número válido
+        const parsed = parseInt(codigo, 10);
+        return p.id === parsed;
+      });
 
       if (!producto) {
         setMostrarNuevoProducto(true);
@@ -135,12 +137,12 @@ const Scanner = () => {
 
       <AddProductForm
         visible={mostrarFormulario}
+        barcode={scannedData}
         onClose={() => {
           setMostrarFormulario(false);
           setScannedData("");
           puedeEscanearRef.current = true;
         }}
-        barcode={scannedData}
       />
     </View>
   );
