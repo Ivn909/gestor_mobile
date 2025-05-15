@@ -53,14 +53,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 8,
     marginRight: 10,
-    width: 180,
+    width: 160,
   },
   pickerWrapper: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
     overflow: "hidden",
-    width: 180,
+    width: 160,
   },
 });
 

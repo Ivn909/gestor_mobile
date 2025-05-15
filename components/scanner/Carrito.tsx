@@ -65,21 +65,35 @@ const Carrito = ({ productos, setProductos, onClose }: any) => {
     try {
       for (const producto of productos) {
         if (!producto.productID) {
-          console.warn("Falta el campo productID en:", producto);
+          console.warn("Falta productID en:", producto);
           continue;
         }
 
         const res = await fetch(
-          `http://66.179.92.207:3000/api/inventory/stock/${producto.productID}`,
+          `http://lo:3000/api/inventory/stock/${producto.productID}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            credentials: "include", // 🔐 Se añade aquí
+            credentials: "include",
             body: JSON.stringify({
-              quantity: producto.cantidad,
+              productID: producto.productID,
+              cantidad: producto.cantidad,
             }),
           }
         );
+
+        if (!res.ok) {
+          const errorText = await res.text(); // <-- captura HTML o mensaje de error
+          console.error(
+            `Error HTTP al actualizar ${producto.name}:`,
+            errorText
+          );
+          Alert.alert(
+            "Error",
+            `No se pudo actualizar el stock de ${producto.name}`
+          );
+          return;
+        }
 
         const data = await res.json();
         if (!data.success) {
