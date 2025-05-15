@@ -11,7 +11,7 @@ import {
   useNavigationContainerRef,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createDrawerNavigator } from "@react-navigation/drawer";
+import { createDrawerNavigator, } from "@react-navigation/drawer";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import LoginScreen from "./screens/LogIn";
@@ -33,7 +33,9 @@ const DrawerNavigator = () => (
     }}
   >
     <Drawer.Screen name="Inicio" component={DashboardScreen} />
-    <Drawer.Screen name="Escáner" component={ScannerScreen} />
+    <Drawer.Screen name="Escáner" component={ScannerScreen}
+
+/>
     <Drawer.Screen name="Inventario" component={InventoryScreen} />
     <Drawer.Screen name="Empleados" component={Employees} />
     

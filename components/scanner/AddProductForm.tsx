@@ -33,18 +33,13 @@ const AddProductForm = ({ visible, onClose, barcode }: Props) => {
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const resetForm = () => {
-    setName("");
-    setPrice("");
-    setStock("");
-    setCategory("");
-    setDescription("");
-  };
-
-  // Limpiar campos cada vez que se abre el modal
   useEffect(() => {
     if (visible) {
-      resetForm();
+      setName("");
+      setPrice("");
+      setStock("");
+      setCategory("");
+      setDescription("");
     }
   }, [visible]);
 
@@ -52,9 +47,7 @@ const AddProductForm = ({ visible, onClose, barcode }: Props) => {
     if (visible) {
       fetch("http://66.179.92.207:3000/api/inventory/categories")
         .then((res) => res.json())
-        .then((data: Category[]) => {
-          setCategories(data);
-        })
+        .then((data: Category[]) => setCategories(data))
         .catch((err) => {
           console.error("Error al obtener categorías:", err);
           Alert.alert("Error", "No se pudieron cargar las categorías.");
@@ -80,7 +73,6 @@ const AddProductForm = ({ visible, onClose, barcode }: Props) => {
 
       if (data.success) {
         Alert.alert("Éxito", "Producto registrado correctamente");
-        resetForm(); // Limpiar formulario después de guardar
         onClose();
       } else {
         throw new Error(data.error || "Error desconocido");
@@ -96,7 +88,7 @@ const AddProductForm = ({ visible, onClose, barcode }: Props) => {
         <Text style={styles.title}>Registrar nuevo producto</Text>
         <ScrollView>
           <Text style={styles.label}>Código de Barras</Text>
-          <TextInput style={styles.input} value={barcode} editable={false} />
+          <TextInput style={styles.input} value={barcode.replace(/\s/g, "")} editable={false} />
 
           <Text style={styles.label}>Nombre</Text>
           <TextInput style={styles.input} value={name} onChangeText={setName} />
@@ -109,11 +101,7 @@ const AddProductForm = ({ visible, onClose, barcode }: Props) => {
           >
             <Picker.Item label="Selecciona una categoría" value="" />
             {categories.map((cat) => (
-              <Picker.Item
-                key={cat.id}
-                label={cat.name}
-                value={String(cat.id)}
-              />
+              <Picker.Item key={cat.id} label={cat.name} value={String(cat.id)} />
             ))}
           </Picker>
 
@@ -141,19 +129,10 @@ const AddProductForm = ({ visible, onClose, barcode }: Props) => {
           />
 
           <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={registrarProducto}
-            >
+            <TouchableOpacity style={styles.saveButton} onPress={registrarProducto}>
               <Text style={styles.buttonText}>Guardar</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                resetForm(); // Limpiar también si cancela
-                onClose();
-              }}
-            >
+            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
               <Text style={styles.buttonText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
@@ -162,8 +141,8 @@ const AddProductForm = ({ visible, onClose, barcode }: Props) => {
     </Modal>
   );
 };
+
 export default AddProductForm;
-// ... tus estilos siguen iguales
 
 const styles = StyleSheet.create({
   container: {

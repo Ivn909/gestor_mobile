@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   View,
-  Text,
   Alert,
   StyleSheet,
   TouchableOpacity,
@@ -10,7 +9,8 @@ import {
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
-import { useIsFocused } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
+import { useDrawerStatus } from '@react-navigation/drawer';
 
 import Carrito from "../components/scanner/Carrito";
 import Header from "../components/navigation/Header";
@@ -19,7 +19,8 @@ import AddProductForm from "../components/scanner/AddProductForm";
 
 const Scanner = () => {
   const [permission, requestPermission] = useCameraPermissions();
-  const isFocused = useIsFocused();
+  const [isCameraActive, setIsCameraActive] = useState(true);
+  const isDrawerOpen = useDrawerStatus() === 'open';
 
   const [scannedData, setScannedData] = useState("");
   const [carrito, setCarrito] = useState<any[]>([]);
@@ -30,10 +31,23 @@ const Scanner = () => {
   const puedeEscanearRef = useRef(true);
 
   useEffect(() => {
-    if (isFocused && !permission?.granted) {
+    if (!permission?.granted) {
       requestPermission();
     }
-  }, [isFocused]);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsCameraActive(true);
+      return () => setIsCameraActive(false);
+    }, [])
+  );
+
+  const iniciarCooldown = () => {
+    setTimeout(() => {
+      puedeEscanearRef.current = true;
+    }, 6000);
+  };
 
   const agregarAlCarrito = (producto: any) => {
     setCarrito((prev) => {
@@ -48,7 +62,7 @@ const Scanner = () => {
   };
 
   const onBarcodeScanned = async (result: any) => {
-    if (!puedeEscanearRef.current || !isFocused) return;
+    if (!puedeEscanearRef.current) return;
     puedeEscanearRef.current = false;
 
     const codigo = result.data.trim();
@@ -59,7 +73,6 @@ const Scanner = () => {
       const productos = await res.json();
 
       const producto = productos.find((p: any) => {
-        // Comparar numéricamente si el código escaneado es un número válido
         const parsed = parseInt(codigo, 10);
         return p.id === parsed;
       });
@@ -75,29 +88,19 @@ const Scanner = () => {
       };
 
       agregarAlCarrito(productoConID);
-
-      // ✅ Vibración breve
       Vibration.vibrate(100);
-
-      Alert.alert("Producto escaneado", producto.name, [
-        {
-          text: "OK",
-          onPress: () => {
-            setScannedData("");
-            puedeEscanearRef.current = true;
-          },
-        },
-      ]);
+      Alert.alert("Producto escaneado", producto.name);
     } catch (error) {
       Alert.alert("Error", "No se pudo escanear el producto");
-      puedeEscanearRef.current = true;
+    } finally {
+      iniciarCooldown();
     }
   };
 
   return (
     <View style={styles.container}>
       <Header />
-      {isFocused && permission?.granted && !mostrarFormulario && (
+      {permission?.granted && isCameraActive && !mostrarFormulario && !mostrarCarrito && !isDrawerOpen && (
         <CameraView
           style={styles.camera}
           barcodeScannerSettings={{
@@ -126,8 +129,7 @@ const Scanner = () => {
         visible={mostrarNuevoProducto}
         onCancel={() => {
           setMostrarNuevoProducto(false);
-          setScannedData("");
-          puedeEscanearRef.current = true;
+          iniciarCooldown();
         }}
         onRegister={() => {
           setMostrarNuevoProducto(false);
@@ -140,8 +142,8 @@ const Scanner = () => {
         barcode={scannedData}
         onClose={() => {
           setMostrarFormulario(false);
-          setScannedData("");
-          puedeEscanearRef.current = true;
+          setScannedData(""); // limpiar aquí
+          iniciarCooldown();
         }}
       />
     </View>
