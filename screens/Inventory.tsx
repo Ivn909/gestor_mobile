@@ -155,11 +155,14 @@ const Inventory: React.FC = () => {
       <View style={styles.container}>
         <Text style={styles.title}>Inventario</Text>
 
-        <FilterInventory
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          categories={categories}
-        />
+        <View style={{ zIndex: 1000 }}>
+          <FilterInventory
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            categories={categories}
+          />
+        </View>
+
 
         {loading ? (
           <ActivityIndicator size="large" color="#000" />

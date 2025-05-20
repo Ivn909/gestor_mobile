@@ -1,4 +1,3 @@
-// components/scanner/NewProductAlert.tsx
 import React from "react";
 import { Modal, View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
@@ -18,12 +17,13 @@ const NewProductAlert = ({ visible, onCancel, onRegister }: Props) => {
             Se ha escaneado un producto que no se encuentra en el inventario.
             ¿Qué quieres hacer con él?
           </Text>
+
           <View style={styles.buttons}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-              <Text style={styles.btnText}>Cancelar</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.okBtn} onPress={onRegister}>
               <Text style={styles.btnText}>Registrar en inventario</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
+              <Text style={styles.cancelText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -58,22 +58,27 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttons: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
+    flexDirection: "column", //  Botones uno debajo del otro
     gap: 10,
-  },
-  cancelBtn: {
-    backgroundColor: "#ccc",
-    padding: 10,
-    borderRadius: 6,
   },
   okBtn: {
     backgroundColor: "#28a745",
-    padding: 10,
+    padding: 12,
     borderRadius: 6,
+    alignItems: "center",
+  },
+  cancelBtn: {
+    backgroundColor: "#ccc",
+    padding: 12,
+    borderRadius: 6,
+    alignItems: "center",
   },
   btnText: {
     color: "#fff",
+    fontWeight: "bold",
+  },
+  cancelText: {
+    color: "#333",
     fontWeight: "bold",
   },
 });

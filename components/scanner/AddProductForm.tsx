@@ -98,12 +98,19 @@ const AddProductForm = ({ visible, onClose, barcode }: Props) => {
             selectedValue={category}
             onValueChange={(value) => setCategory(value)}
             style={styles.picker}
+            itemStyle={styles.pickerItem} // 👈 Añadido
           >
             <Picker.Item label="Selecciona una categoría" value="" />
             {categories.map((cat) => (
-              <Picker.Item key={cat.id} label={cat.name} value={String(cat.id)} />
+              <Picker.Item
+                key={cat.id}
+                label={cat.name}
+                value={String(cat.id)}
+                color="#000" // 👈 Forzamos el color negro por si itemStyle no aplica en iOS
+              />
             ))}
           </Picker>
+
 
           <Text style={styles.label}>Precio</Text>
           <TextInput
@@ -204,4 +211,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
+  pickerItem: {
+    color: "#000", // texto negro
+    fontSize: 16,
+  },
+
 });

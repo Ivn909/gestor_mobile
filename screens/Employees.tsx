@@ -118,7 +118,7 @@ const Employees: React.FC = () => {
       name: editingUser.Name,
       phone: editingUser.Phone,
       role: editingUser.Role,
-       hiringDate: editingUser.Hired.slice(0, 10), // <-- clave aquí
+      hiringDate: editingUser.Hired.slice(0, 10), // <-- clave aquí
       username: editingUser.User,
       status: editingUser.Status,
     };
@@ -165,7 +165,7 @@ const Employees: React.FC = () => {
     <View style={styles.screen}>
       <Header />
       <View style={styles.container}>
-        <View style={styles.titleRow}>
+        <View style={styles.titleBlock}>
           <Text style={styles.title}>Empleados</Text>
           {userRole === 1 && (
             <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
@@ -173,6 +173,7 @@ const Employees: React.FC = () => {
             </TouchableOpacity>
           )}
         </View>
+
 
         <EmployeesTable
           employees={employees}
@@ -206,21 +207,21 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 50,
   },
-  titleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  titleBlock: {
     marginBottom: 20,
   },
+
   title: {
     fontSize: 24,
     fontWeight: "bold",
   },
   addButton: {
+    marginTop: 10,
     backgroundColor: "#28a745",
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
+    width: 145,
   },
   addButtonText: {
     color: "white",

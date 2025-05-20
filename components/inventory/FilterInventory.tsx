@@ -1,7 +1,6 @@
-// components/inventory/FilterInventory.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, TextInput, StyleSheet } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import DropDownPicker from "react-native-dropdown-picker";
 
 interface FilterProps {
   filters: {
@@ -17,6 +16,22 @@ const FilterInventory: React.FC<FilterProps> = ({
   onFilterChange,
   categories,
 }) => {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(filters.category);
+  const [items, setItems] = useState<{ label: string; value: string }[]>([]);
+
+  useEffect(() => {
+    const formatted = categories.map((cat) => ({
+      label: cat.name,
+      value: cat.name,
+    }));
+    setItems(formatted);
+  }, [categories]);
+
+  useEffect(() => {
+    setValue(filters.category);
+  }, [filters.category]);
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -26,41 +41,49 @@ const FilterInventory: React.FC<FilterProps> = ({
         onChangeText={(text) => onFilterChange("name", text)}
       />
 
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={filters.category}
-          onValueChange={(value) => onFilterChange("category", value)}
-        >
-          <Picker.Item label="Categoría" value="" />
-          {categories.map((cat) => (
-            <Picker.Item key={cat.id} label={cat.name} value={cat.name} />
-          ))}
-        </Picker>
-      </View>
+      <DropDownPicker
+        open={open}
+        value={value}
+        items={items}
+        setOpen={setOpen}
+        setValue={setValue}
+        setItems={setItems}
+        placeholder="Categoría"
+        onChangeValue={(val) => onFilterChange("category", val || "")}
+        style={styles.dropdown}
+        dropDownContainerStyle={styles.dropdownContainer}
+        zIndex={1000}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    gap: 10,
+    zIndex: 1000,
   },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    padding: 8,
-    marginRight: 10,
-    width: 160,
+    paddingHorizontal: 10,
+    height: 48,
+    width: "100%",
   },
-  pickerWrapper: {
+  dropdown: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    overflow: "hidden",
-    width: 160,
+    paddingHorizontal: 10,
+    height: 40,
+    width: "100%",
+  },
+  dropdownContainer: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    width: "100%",
   },
 });
 

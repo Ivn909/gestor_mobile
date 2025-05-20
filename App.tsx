@@ -1,3 +1,6 @@
+import 'react-native-gesture-handler';
+import 'react-native-reanimated'; // 👈 Esto es muy importante
+
 import React, { useEffect, useRef, useState } from "react";
 import {
   BackHandler,
